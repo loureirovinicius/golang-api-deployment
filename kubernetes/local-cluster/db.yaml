@@ -1,0 +1,108 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-volume
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain # Local volume doesn't support the deleting as a reclaiming policy, so if needed, don't forget to delete all the files in the volume.
+  storageClassName: "local-storage"
+  local:
+    path: "/mnt/"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data-claim
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: db
+  selector:
+    app: app-database
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset
+spec:
+  selector:
+    matchLabels:
+      app: app-database
+  serviceName: "db-service"
+  replicas: 3
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: app-database
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: database-container
+        image: postgres:13-alpine
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 10
+          periodSeconds: 3
+        ports:
+          - containerPort: 5432
+        envFrom:
+          - configMapRef:
+              name: app-configmap
+          - secretRef:
+              name: app-secrets
+        volumeMounts:
+        - name: postgres-data
+          mountPath: "/var/lib/postgresql/data/"
+        - name: db-population
+          mountPath: "/docker-entrypoint-initdb.d"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data-claim
+            readOnly: false
+        - name: db-population
+          configMap:
+            name: db-population
+            defaultMode: 0744

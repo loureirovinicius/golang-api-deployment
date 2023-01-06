@@ -1,0 +1,9 @@
+.git
+.gitignore
+README.md
+terraform
+kubernetes
+scripts
+sql
+templates
+.env.example

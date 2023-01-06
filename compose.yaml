@@ -1,0 +1,47 @@
+services:
+  db-definition:
+    image: busybox:stable
+    volumes:
+      - ./scripts/:/scripts/
+      - ./sql/:/sql/
+    env_file:
+      - configs.env
+    entrypoint: /scripts/dbconfig.sh
+  
+  database:
+    # The container_name is a required config if running the app on containers. For more information, relate to:
+    # https://stackoverflow.com/questions/57696882/docker-golang-lib-pq-dial-tcp-127-0-0-15432-connect-connection-refused
+    container_name: database-container
+    image: postgres:13-alpine
+    env_file:
+      - configs.env
+    volumes:
+      - db-data:/var/lib/postgresql/data:rw
+      - ./sql/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432/tcp"
+    depends_on:
+      - db-definition
+    networks:
+      - backend
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on: 
+      - database
+    env_file:
+      - configs.env
+    ports:
+      - "9000:9000/tcp"
+    networks:
+      - backend
+
+volumes:
+  db-data:
+    driver: local
+    
+
+networks:
+  backend: {}

@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-population
+data:
+  dbconfig.sql: |-
+    CREATE DATABASE $DB_NAME;
+    CREATE USER $PGUSER;
+    ALTER USER $PGUSER WITH ENCRYPTED PASSWORD '$PGPASSWORD';
+    GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $PGUSER;
+    \c $DB_NAME;
+    CREATE TABLE todos(id serial primary key, title varchar, description text, done bool default false);
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO $PGUSER;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA PUBLIC TO $PGUSER;
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-configmap
+data:
+  API_PORT: "$API_PORT"
+  HOST: "$HOST"
+  DB_PORT: "$DB_PORT"
+  DB_NAME: "$DB_NAME"
