@@ -1,0 +1,76 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: app-deployment
+  ports:
+    - port: 80
+      targetPort: 9000
+      nodePort: 31000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: app-deployment
+  name: app-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app-deployment
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: app-deployment
+      name: todo-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - image: loureirovini/golang-crud:latest
+        name: golang-crud
+        ports:
+        - containerPort: 9000
+        imagePullPolicy: IfNotPresent
+        # Since the default machine type is configured to be e2-micro (really small), setting requests and limits may lead to some issues.
+        # resources:
+        #   requests:
+        #     cpu: ""
+        #     memory: ""
+        #   limits:
+        #     cpu: ""
+        #     memory: ""
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 9000
+            httpHeaders:
+            - name: Liveness-Header
+              value: Live
+          initialDelaySeconds: 3
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 9000
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+        envFrom:
+        - configMapRef:
+            name: app-configmap
+        - secretRef:
+            name: app-secrets
+        securityContext:
+          runAsUser: 11111
+          runAsGroup: 22222
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false

@@ -1,0 +1,84 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: golang-api-db-storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-standard
+  fstype: ext4
+  replication-type: none
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: db
+  selector:
+    app: app-database
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset
+spec:
+  selector:
+    matchLabels:
+      app: app-database
+  serviceName: "db-service"
+  replicas: 3
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: app-database
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: database-container
+        image: postgres:13-alpine
+        imagePullPolicy: IfNotPresent
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        ports:
+          - containerPort: 5432
+        env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata/
+        envFrom:
+          - secretRef:
+              name: app-secrets
+        volumeMounts:
+        - name: db-data-claim
+          mountPath: "/var/lib/postgresql/data/"
+        - name: db-population
+          mountPath: "/docker-entrypoint-initdb.d"
+      volumes:
+        - name: db-population
+          configMap:
+            name: db-population
+            defaultMode: 0744
+  volumeClaimTemplates:
+  - metadata:
+      name: db-data-claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      volumeMode: Filesystem
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: golang-api-db-storage
