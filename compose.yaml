@@ -6,7 +6,7 @@ services:
       - ./sql/:/sql/
     env_file:
       - configs.env
-    entrypoint: /scripts/dbconfig.sh
+    entrypoint: /scripts/configs.sh
   
   database:
     # The container_name is a required config if running the app on containers. For more information, relate to:
