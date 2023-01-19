@@ -20,6 +20,11 @@ resource "time_sleep" "wait_apis_activation" {
   create_duration = "30s"
 }
 
+resource "google_compute_global_address" "ingress_static_ip" {
+  name         = var.static_ip_name
+  address_type = "EXTERNAL"
+}
+
 module "vpc" {
   source  = "terraform-google-modules/network/google"
   version = "~> 6.0"
