@@ -1,12 +1,14 @@
 #!/bin/sh
 
+# ConfigMap and DDL script
+
 export PGUSER=
 export PGPASSWORD=
-export POSTGRES_USER=postgres
-export POSTGRES_PASSWORD=123456
-export DB_NAME=todo_db
+export POSTGRES_USER=
+export POSTGRES_PASSWORD=
+export DB_NAME=
 export API_PORT=9000
-export HOST=db_service
+export HOST=db-service
 export DB_PORT=5432
 
 echo "CREATE DATABASE $DB_NAME;
@@ -22,6 +24,8 @@ chmod 744 ../sql/definition.sql
 
 envsubst "$(printf '${%s} ' $(env | cut -d'=' -f1))" < ../templates/configs.yaml >> ../kubernetes/cloud-provider/configs.yaml
 envsubst "$(printf '${%s} ' $(env | cut -d'=' -f1))" < ../templates/configs.yaml >> ../kubernetes/local-cluster/configs.yaml
+
+# Secrets
 
 export PGUSER=$(echo -n "$PGUSER" | base64)
 export PGPASSWORD=$(echo -n "$PGPASSWORD" | base64)
