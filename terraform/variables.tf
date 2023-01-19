@@ -121,3 +121,14 @@ variable "image_type" {
   description = "The container runtime image to use in nodes"
 }
 
+variable "static_ip_name" {
+  type = string
+  default = "ingress-static-ip"
+  description = "The static IP that will be assigned to ingress rules"
+}
+
+variable "static_ip_address" {
+  type = string
+  default = "10.0.10.10"
+  description = "Static IP's address"
+}
