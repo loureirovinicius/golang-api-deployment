@@ -31,6 +31,8 @@ services:
       dockerfile: Dockerfile
     depends_on: 
       - database
+    environment:
+      - HOST=database-container
     env_file:
       - configs.env
     ports:
