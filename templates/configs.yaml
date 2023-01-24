@@ -20,6 +20,5 @@ metadata:
   name: app-configmap
 data:
   API_PORT: "$API_PORT"
-  HOST: "$HOST"
   DB_PORT: "$DB_PORT"
   DB_NAME: "$DB_NAME"

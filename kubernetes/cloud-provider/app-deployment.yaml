@@ -63,6 +63,9 @@ spec:
               value: application/json
           initialDelaySeconds: 10
           timeoutSeconds: 3
+        env:
+        - name: HOST
+          value: "db-service"
         envFrom:
         - configMapRef:
             name: app-configmap

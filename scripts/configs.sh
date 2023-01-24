@@ -2,23 +2,22 @@
 
 # ConfigMap and DDL script
 
-export PGUSER=
-export PGPASSWORD=
-export POSTGRES_USER=
-export POSTGRES_PASSWORD=
-export DB_NAME=
-export API_PORT=9000
-export HOST=db-service
-export DB_PORT=5432
+if [ -f "../configs.env" ]; then
+    set -a
+    . ../configs.env
+    set +a
+fi
 
-echo "CREATE DATABASE $DB_NAME;
+cat <<EOF > ../sql/definition.sql
+CREATE DATABASE $DB_NAME;
 CREATE USER $PGUSER;
 ALTER USER $PGUSER WITH ENCRYPTED PASSWORD '$PGPASSWORD';
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $PGUSER;
-\\\c $DB_NAME;
+\c $DB_NAME $PGUSER;
 CREATE TABLE todos(id serial primary key, title varchar, description text, done bool default false);
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA PUBLIC TO $PGUSER;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA PUBLIC TO $PGUSER;" > ../sql/definition.sql
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA PUBLIC TO $PGUSER; 
+EOF
 
 chmod 744 ../sql/definition.sql
 
