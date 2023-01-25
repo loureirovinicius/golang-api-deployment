@@ -8,3 +8,6 @@ scripts
 sql
 templates
 .env.example
+README.md
+LICENSE
+compose.yaml
