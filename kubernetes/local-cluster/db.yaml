@@ -16,7 +16,7 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain # Local volume doesn't support the deleting as a reclaiming policy, so if needed, don't forget to delete all the files in the volume.
+  persistentVolumeReclaimPolicy: Retain # Local volume doesn't support "delete" as a reclaiming policy, so if needed, don't forget to delete the files inside the volume.
   storageClassName: "local-storage"
   local:
     path: "/mnt/"
