@@ -8,6 +8,8 @@ if [ -f "../configs.env" ]; then
     set +a
 fi
 
+mkdir ../sql/
+
 cat <<EOF > ../sql/definition.sql
 CREATE DATABASE $DB_NAME;
 CREATE USER $PGUSER;
