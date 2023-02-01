@@ -23,6 +23,9 @@ resource "time_sleep" "wait_apis_activation" {
 resource "google_compute_global_address" "ingress_static_ip" {
   name         = var.static_ip_name
   address_type = "EXTERNAL"
+  depends_on = [
+    time_sleep.wait_apis_activation
+  ]
 }
 
 module "vpc" {
